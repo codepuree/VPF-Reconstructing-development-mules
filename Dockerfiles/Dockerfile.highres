@@ -1,0 +1,24 @@
+ARG CUDA=11.1
+ARG CUDNN=8
+
+FROM pytorch/pytorch:1.8.0-cuda${CUDA}-cudnn${CUDNN}-runtime
+
+ENV CUDA_VISIBLE_DEVICES=0
+ENV USE_GPU=0
+RUN apt-get -y update && apt-get -y upgrade && apt-get -y install \ 
+	ffmpeg \
+	&& apt-get -y autoremove && apt-get clean
+
+RUN echo "export USE_GPU=0" >> ~/bashrc && echo "export CUDA_VISIBLE_DEVICES=0" >> ~/.bashrc
+
+COPY . /root/code
+WORKDIR /root/code
+
+RUN pip install numpy matplotlib opencv-python texttable scikit-image
+
+# # load model weights
+# WORKDIR /root/code/weights
+# RUN wget http://www.contrib.andrew.cmu.edu/~gengshay/wordpress/wp-content/uploads/2020/01/kitti.tar
+
+WORKDIR /root/code
+CMD python submission.py --datapath ./data-mbtest/ --outdir ./mboutput --loadmodel ./weights/kitti.tar  --testres 1 --clean 1.0 --max_disp -1

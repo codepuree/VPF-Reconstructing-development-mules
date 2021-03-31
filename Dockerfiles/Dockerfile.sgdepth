@@ -1,0 +1,18 @@
+ARG CUDA=11.1
+ARG CUDNN=8
+
+FROM pytorch/pytorch:1.8.0-cuda${CUDA}-cudnn${CUDNN}-runtime
+
+ENV CUDA_VISIBLE_DEVICES=0
+ENV USE_GPU=0
+RUN apt-get -y update && apt-get -y upgrade && apt-get -y install \ 
+	ffmpeg \
+	&& apt-get -y autoremove && apt-get clean
+
+RUN echo "export USE_GPU=0" >> ~/bashrc && echo "export CUDA_VISIBLE_DEVICES=0" >> ~/.bashrc
+
+COPY . /root/code
+WORKDIR /root/code
+RUN pip install -r requirements.txt
+
+CMD python inference.py --image-path /root/imgs --output-path /root/depths --model-path weights/SGDepth_full.pth
